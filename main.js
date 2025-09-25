@@ -2,11 +2,18 @@
 const noteTopic = document.querySelector(".input-topic");
 const noteDescription = document.querySelector(".input-desc");
 const noteSave = document.querySelector(".submit");
-
-const editBtn = document.querySelectorAll(".edit");
+const loading = document.querySelector(".loading");
 const noteBox = document.getElementById("note-box");
+const alertBox = document.querySelector(".alert");
+const alertMessage = document.querySelector(".alert-message");
+const filterInput = document.querySelector(".filter");
+
+//loading state
+
+setTimeout(() => (loading.style.display = "none"), 4000);
 
 let saveNote = JSON.parse(localStorage.getItem("notes")) || [];
+let editNoteIndex = null;
 
 function saveData() {
   localStorage.setItem("notes", JSON.stringify(saveNote));
@@ -19,37 +26,115 @@ function addNote() {
   const description = noteDescription.value;
 
   if (!topic || !description) {
-    console.log("Fill the forms");
+    // console.log("Fill the forms");
+    alertBox.classList.add("show");
+    alertMessage.textContent = "❌ Fill in the form field";
+    setTimeout(() => alertBox.classList.remove("show"), 3000);
+  } else if (editNoteIndex !== null) {
+    //updating existing note
+    saveNote[editNoteIndex].topic = topic;
+    saveNote[editNoteIndex].description = description;
+    saveNote[editNoteIndex].date = new Date().toISOString();
+
+    editNoteIndex = null;
+    noteSave.innerHTML = `
+    
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="save-icon"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+              />
+            </svg>
+
+            <span>Save Note</span>
+           `;
+    alertBox.classList.add("show");
+    alertMessage.textContent = "🤖 Note updated Succesfully";
+    setTimeout(() => alertBox.classList.remove("show"), 3000);
   } else {
     let newNote = {
       topic,
       description,
-      date: new Date().toLocaleDateString(),
+      date: new Date().toISOString(),
     };
     //push to saveNote
     saveNote.push(newNote);
-    displayNote();
-    saveData();
+    alertBox.classList.add("show");
+    alertMessage.textContent = `✅ Note added succesfully. Topic: ${topic}`;
+    setTimeout(() => alertBox.classList.remove("show"), 3000);
   }
+
+  displayNote();
+  saveData();
 
   noteTopic.value = noteDescription.value = "";
 }
 noteSave.addEventListener("click", addNote);
 
+// date formart
+function formatDateLabel(dateString) {
+  const date = new Date(dateString);
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+
+  const diffTime = today - date;
+  const diffDay = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDay === 0) {
+    return "Today";
+  } else if (diffDay === 1) {
+    return "Yesterday";
+  } else if (diffDay < 7) {
+    return `${diffDay} days ago`;
+  } else {
+    const locale = navigator.language;
+    const option = {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    };
+    return new Date(dateString).toLocaleDateString(locale, option);
+  }
+}
+
+//filter logic
+filterInput.addEventListener("input", () => {
+  const filterText = filterInput.value.toLowerCase();
+
+  const filteredNotes = saveNote.filter(
+    (note) =>
+      note.topic.toLowerCase().includes(filterText) ||
+      note.description.toLowerCase().includes(filterText)
+  );
+
+  displayNote(filteredNotes);
+});
+
 //display saved note
-function displayNote() {
+function displayNote(notes = saveNote) {
   noteBox.innerHTML = "";
 
-  saveNote.forEach((note, i) => {
+  notes.forEach((note, i) => {
     let noteCard = document.createElement("div");
     noteCard.classList.add("note-card");
     noteCard.innerHTML = `
 
                 <h1 class="note-topic">${note.topic}</h1>
                 <p class="note-description">${note.description}</p>
-            <p class="note-date">${note.date}</p>
+            <p class="note-date">${formatDateLabel(note.date)}</p>
             <div class="action">
-              <button class="edit">
+              <button class="edit" data-edit="${i}">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -87,21 +172,43 @@ function displayNote() {
     noteBox.prepend(noteCard);
   });
   deleteNote();
+  editNote();
 }
 
 //delete note
 function deleteNote() {
   const deleteBtn = document.querySelectorAll(".delete");
-  console.log(deleteBtn);
+
   deleteBtn.forEach((btn) => {
     btn.addEventListener("click", () => {
       const index = +btn.getAttribute("data-del");
       saveNote.splice(index, 1);
+
+      alertBox.classList.add("show");
+      alertMessage.textContent = `😒 Note Deleted succesfully!`;
+      setTimeout(() => alertBox.classList.remove("show"), 3000);
       displayNote();
       saveData();
     });
   });
 }
 //edit note
+function editNote() {
+  const editBtn = document.querySelectorAll(".edit");
+  editBtn.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      editNoteIndex = +btn.getAttribute("data-edit");
 
-document.addEventListener("DOMContentLoaded", displayNote);
+      const note = saveNote[editNoteIndex]; //{topic: yaw , description: jddhjddjhd}
+
+      //load value into inputs
+      noteTopic.value = note.topic;
+      noteDescription.value = note.description;
+
+      //update the text of the button
+      noteSave.textContent = "Update Note";
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", displayNote(saveNote));

@@ -22,10 +22,23 @@
     <title>Document</title>
   </head>
   <body>
+    <div class="loading">
+      <img src="./image/loading.jpg" alt="loading" />
+      <p>Save your note with just a click</p>
+    </div>
     <section class="note-page">
       <div class="notes-container">
         <div class="note-header">
           <h1>📝Note history</h1>
+        </div>
+
+        <div class="filter-box">
+          <label>filter</label>
+          <input
+            type="text"
+            placeholder="Filter by topic or description"
+            class="filter"
+          />
         </div>
 
         <div class="notes" id="note-box"></div>
@@ -64,6 +77,10 @@
             <span>Save Note</span>
           </button>
         </div>
+      </div>
+
+      <div class="alert">
+        <p class="alert-message"></p>
       </div>
     </section>
 
