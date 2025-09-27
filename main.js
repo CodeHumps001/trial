@@ -7,18 +7,58 @@ const noteBox = document.getElementById("note-box");
 const alertBox = document.querySelector(".alert");
 const alertMessage = document.querySelector(".alert-message");
 const filterInput = document.querySelector(".filter");
+const formModal = document.getElementById("note-modal");
+const openBtn = document.getElementById("open-form");
+const help = document.getElementById("help");
+const info = document.getElementById("info");
+// working on form modal
+function toggleForm() {
+  formModal.classList.toggle("hidden");
+  if (!formModal.classList.contains("hidden")) {
+    openBtn.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+</svg>
+`;
+  } else {
+    openBtn.innerHTML = `
+      <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="form-icon"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 4.5v15m7.5-7.5h-15"
+            />
+          </svg>
+    `;
+  }
+}
+function toggleInfo() {
+  info.classList.toggle("hidden");
+}
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape") {
+    toggleForm();
+  }
+});
+openBtn.addEventListener("click", toggleForm);
+help.addEventListener("click", toggleInfo);
 
 //loading state
-
 setTimeout(() => (loading.style.display = "none"), 4000);
 
 let saveNote = JSON.parse(localStorage.getItem("notes")) || [];
 let editNoteIndex = null;
-
 function saveData() {
   localStorage.setItem("notes", JSON.stringify(saveNote));
 }
-
 //save note
 
 function addNote() {
@@ -74,6 +114,7 @@ function addNote() {
 
   displayNote();
   saveData();
+  toggleForm();
 
   noteTopic.value = noteDescription.value = "";
 }
@@ -207,6 +248,7 @@ function editNote() {
 
       //update the text of the button
       noteSave.textContent = "Update Note";
+      toggleForm();
     });
   });
 }
